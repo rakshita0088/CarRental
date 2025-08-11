@@ -35,48 +35,100 @@ import com.google.firebase.database.FirebaseDatabase
 
 private const val CHANNEL_ID = "speed_warning_channel"
 
+//@RequiresApi(Build.VERSION_CODES.P)
+//@Composable
+//fun SpeedMonitorScreen(viewModel: SpeedViewModel = viewModel()) {
+//    val context = LocalContext.current
+//    val vehicleData = viewModel.vehicleData.value
+//
+//    // Observe the dynamic speed limit. It will be null initially, then Int.
+//    val fetchedSpeedLimit: Int? by viewModel.speedLimit.collectAsState() // Use collectAsState() for StateFlow
+//
+//    var currentSpeed by remember { mutableStateOf(0) }
+//
+//    // Create notification channel when screen loads
+//    LaunchedEffect(Unit) {
+//        createNotificationChannel(context)
+//        viewModel.collectData() // Ensure this is called to initialize vehicleData (and trigger speed limit fetch)
+//    }
+//
+//    Column(Modifier.padding(16.dp)) {
+//        // Manually set current speed for testing
+//        OutlinedTextField(
+//            value = currentSpeed.toString(),
+//            onValueChange = { currentSpeed = it.toIntOrNull() ?: 0 },
+//            label = { Text("Set Current Speed (km/h)") },
+//            singleLine = true
+//        )
+//        Spacer(Modifier.height(16.dp))
+//
+//        if (vehicleData != null && fetchedSpeedLimit != null) {
+//            Text("Ignition Status: ${vehicleData.ignitionStatus.value}")
+//            Text("Manual Speed: $currentSpeed km/h")
+//            // Display the dynamically fetched speed limit
+//            Text("Speed Limit (from Firebase): $fetchedSpeedLimit km/h")
+//
+//            if (vehicleData.ignitionStatus.value == 4) { // Ignition ON
+//                if (currentSpeed > fetchedSpeedLimit!!) { // Use the fetched speed limit here
+//                    // Push data to Firebase, passing the fetched speed limit
+//                    pushMockRentalData(currentSpeed, fetchedSpeedLimit!!)
+//
+//                    // Show speed warning notification, passing the fetched speed limit
+//                    showSpeedWarningNotification(context, currentSpeed, fetchedSpeedLimit!!)
+//                }
+//            } else {
+//                Text("Ignition is OFF - No speed check, no data push")
+//            }
+//        } else {
+//            Text("Fetching vehicle data...")
+//        }
+//    }
+//}
 @RequiresApi(Build.VERSION_CODES.P)
 @Composable
 fun SpeedMonitorScreen(viewModel: SpeedViewModel = viewModel()) {
     val context = LocalContext.current
     val vehicleData = viewModel.vehicleData.value
 
-//    // Observe the dynamic speed limit from the ViewModel!
-//    val fetchedSpeedLimit = viewModel.speedLimit.value ?: 95 // Use 95 as a fallback if not loaded yet
-    // Observe the dynamic speed limit. It will be null initially, then Int.
-    val fetchedSpeedLimit: Int? by viewModel.speedLimit.collectAsState() // Use collectAsState() for StateFlow
+    // Observe dynamic speed limit from Firebase
+    val fetchedSpeedLimit: Int? by viewModel.speedLimit.collectAsState()
 
-    var currentSpeed by remember { mutableStateOf(0) }
+    // For emulator testing — manual speed input
+    var manualSpeed by remember { mutableStateOf(0) }
 
-    // Create notification channel when screen loads
+    // Create notification channel & start data collection
     LaunchedEffect(Unit) {
         createNotificationChannel(context)
-        viewModel.collectData() // Ensure this is called to initialize vehicleData (and trigger speed limit fetch)
+        viewModel.collectData()
     }
 
     Column(Modifier.padding(16.dp)) {
-        // Manually set current speed for testing
+        // Input field to set manual speed for testing
         OutlinedTextField(
-            value = currentSpeed.toString(),
-            onValueChange = { currentSpeed = it.toIntOrNull() ?: 0 },
-            label = { Text("Set Current Speed (km/h)") },
+            value = manualSpeed.toString(),
+            onValueChange = { manualSpeed = it.toIntOrNull() ?: 0 },
+            label = { Text("Set Manual Speed (km/h)") },
             singleLine = true
         )
         Spacer(Modifier.height(16.dp))
 
         if (vehicleData != null && fetchedSpeedLimit != null) {
+            // Get speed from car property
+            val carSpeed = vehicleData.speed.value
+
+            // Use car property speed if available, else fallback to manual
+            val currentSpeedToUse = if (carSpeed > 0) carSpeed else manualSpeed
+
             Text("Ignition Status: ${vehicleData.ignitionStatus.value}")
-            Text("Manual Speed: $currentSpeed km/h")
-            // Display the dynamically fetched speed limit
+            Text("Speed (CarProperty): $carSpeed km/h")
+            Text("Speed (Manual Input): $manualSpeed km/h")
+            Text("Using Speed: $currentSpeedToUse km/h")
             Text("Speed Limit (from Firebase): $fetchedSpeedLimit km/h")
 
             if (vehicleData.ignitionStatus.value == 4) { // Ignition ON
-                if (currentSpeed > fetchedSpeedLimit!!) { // Use the fetched speed limit here
-                    // Push data to Firebase, passing the fetched speed limit
-                    pushMockRentalData(currentSpeed, fetchedSpeedLimit!!)
-
-                    // Show speed warning notification, passing the fetched speed limit
-                    showSpeedWarningNotification(context, currentSpeed, fetchedSpeedLimit!!)
+                if (currentSpeedToUse > fetchedSpeedLimit!!) {
+                    pushMockRentalData(currentSpeedToUse, fetchedSpeedLimit!!)
+                    showSpeedWarningNotification(context, currentSpeedToUse, fetchedSpeedLimit!!)
                 }
             } else {
                 Text("Ignition is OFF - No speed check, no data push")
@@ -86,6 +138,7 @@ fun SpeedMonitorScreen(viewModel: SpeedViewModel = viewModel()) {
         }
     }
 }
+
 
 private fun createNotificationChannel(context: Context) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

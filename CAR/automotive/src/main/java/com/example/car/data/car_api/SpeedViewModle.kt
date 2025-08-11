@@ -115,3 +115,6 @@ class SpeedViewModel : ViewModel() {
         Log.d("SpeedViewModel", "Removed Firebase speed limit listener for $vehicleId")
     }
 }
+
+
+
