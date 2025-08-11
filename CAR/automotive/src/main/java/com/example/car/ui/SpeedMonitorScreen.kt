@@ -58,7 +58,7 @@ fun SpeedMonitorScreen(viewModel: SpeedViewModel = viewModel()) {
             Text("Manual Speed: $currentSpeed km/h")
             Text("Speed Limit: $speedLimit km/h")
 
-            if (vehicleData.ignitionStatus.value == 2) { // Ignition ON
+            if (vehicleData.ignitionStatus.value == 4) { // Ignition ON
                 if (currentSpeed > speedLimit) {
                     // Push data to Firebase
                     pushMockRentalData(currentSpeed)
