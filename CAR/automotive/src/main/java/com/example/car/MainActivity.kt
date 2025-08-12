@@ -9,8 +9,8 @@ import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import com.example.car.ui.AppContextProvider
-import com.example.car.ui.SpeedMonitorScreen
+import com.example.car.presentation.AppContextProvider
+import com.example.car.presentation.screen.SpeedMonitorScreen
 import com.example.car.ui.theme.Theme
 
 class MainActivity : ComponentActivity() {

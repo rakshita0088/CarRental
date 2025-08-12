@@ -1,6 +1,5 @@
 package com.example.car.data.car_api.dto
 
-
 /**
  * Represents the ignition status of the vehicle.
  */

@@ -1,6 +1,5 @@
 package com.example.car.data.car_api.remote
 
-
 import android.car.VehiclePropertyIds
 import android.content.Context
 import android.os.Build
